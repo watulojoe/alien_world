@@ -2,7 +2,7 @@ from django.db import IntegrityError
 from django.shortcuts import redirect, render
 
 from django.contrib.auth.models import User
-from django.contrib.auth import authenticate, login, logout 
+from django.contrib.auth import authenticate, login, logout
 
 from loginApp import settings
 from django.core.mail import send_mail, EmailMessage
@@ -16,6 +16,7 @@ from django.template.loader import render_to_string
 # Create your views here.
 def home_view(request):
     return render(request, "home.html")
+
 
 def signup_user(request):
     """
@@ -34,11 +35,11 @@ def signup_user(request):
         password1 = request.POST["password1"]
         password2 = request.POST["password2"]
 
-        # errors during signup
+        # errors before signup
         if User.objects.filter(email=email):
-            return render(request, "signup.html", {"error": "The email is already in use"})
-        if len(username)<2 or len(username)>10:
-            return render(request, "signup.html", {"error": "your username should be 2-10 characters"})
+            return render(request, "auth/signup.html", {"error": "The email is already in use"})
+        if len(username) < 2 or len(username) > 10:
+            return render(request, "auth/signup.html", {"error": "your username should be 2-10 characters"})
         # todo: username should not be numbers only
         # todo: check if the password entered is strong
 
@@ -47,7 +48,6 @@ def signup_user(request):
                 new_user = User.objects.create_user(username=username, email=email, password=password1)
                 new_user.is_active = False
                 new_user.save()
-                
 
                 # confirm email
                 # todo: write a funtion to seperate this
@@ -55,7 +55,7 @@ def signup_user(request):
                 current_site = get_current_site(request)
                 email_subject = "confirm your email"
                 message = render_to_string(
-                    "email_confirmation.html",
+                    "auth/email_confirmation.html",
                     {
                         "name": new_user.username,
                         "domain": current_site.domain,
@@ -66,31 +66,32 @@ def signup_user(request):
                 email = EmailMessage(email_subject, message, settings.EMAIL_HOST_USER, [new_user.email])
                 email.fail = True
                 email.send()
-                return render(request, "check_email.html")
+                return render(request, "auth/check_email.html")
 
 
             except IntegrityError:
-                return render(request, "signup.html", {"error": 'That username has already been taken. Please choose a new username'})
+                return render(request, "auth/signup.html",
+                              {"error": 'That username has already been taken. Please choose a new username'})
         else:
-            return render(request, "signup.html", {"error": "Passwords did not match"})
+            return render(request, "auth/signup.html", {"error": "Passwords did not match"})
     else:
-        return render(request, "signup.html")
+        return render(request, "auth/signup.html")
 
 
-#activate function
+# activate function
 def activate(request, uidb64, token):
     try:
         uid = force_str(urlsafe_base64_decode(uidb64))
         user = User.objects.get(pk=uid)
     except(TypeError, ValueError, OverflowError, User.DoesNotExist):
         user = None
-    
+
     if user is not None and generate_token.check_token(user, token):
         user.is_active = True
         user.save()
         return redirect('login')
     else:
-        return render(request, "activation_failed.html")
+        return render(request, "auth/activation_failed.html")
 
 
 # done
@@ -110,9 +111,9 @@ def login_user(request):
             login(request, user)
             return redirect("home")
         else:
-            return render(request, "login.html", {'error': 'username and password did not match'})
+            return render(request, "auth/login.html", {'error': 'username and password did not match'})
     else:
-        return render(request, "login.html")
+        return render(request, "auth/login.html")
 
 
 # done

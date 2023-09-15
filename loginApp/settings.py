@@ -49,6 +49,47 @@ INSTALLED_APPS = [
     'acc',
 ]
 
+# todo: setup logging
+import logging
+# done
+
+FORMATTERS = {
+    "simple": {
+        "format":"{asctime} - {levelname} - {module} - {message}",
+        "style": "{",
+    }
+}
+
+HANDLERS = {
+    "console_handler": {
+        "class": "logging.StreamHandler",
+        "formatter": "simple",
+        # ",level": "DEBUG",
+    },
+
+    "file_handler": {
+        "class": "logging.FileHandler",
+        "filename": "info.log",
+        "formatter": "simple",
+    },
+}
+
+# done
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": FORMATTERS,
+    "handlers": HANDLERS,
+    "loggers": {
+        "main": {
+            "handlers": ['file_handler', 'console_handler'],
+            "propagate": True,
+            "level": "INFO",
+        }
+        
+    },
+}
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
